@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-09-11T20:47:27.284085+00:00",
+  "commit": "ba8f6713",
+  "diagnostic_logd": "diagnostic/build-ba8f6713.logd",
+  "diagnostic_logd_error": null,
+  "chunked": false,
+  "chunk_size_bytes": null,
+  "password": "285230a12f98f9e42958",
+  "decrypt_command": "encryptly unpack diagnostic/build-ba8f6713.logd <outdir> --password 285230a12f98f9e42958",
+  "total_modules": 1,
+  "passed": 1,
+  "failed": 0,
+  "modules": [
+    {
+      "name": "market",
+      "status": "PASS",
+      "elapsed_seconds": 1.919,
+      "artifact": "/home/agent/.openclaw/workspace/business/github/zeroeye/market/market",
+      "output": "go: downloading go.uber.org/zap v1.27.0\ngo: downloading github.com/google/uuid v1.6.0\ngo: downloading github.com/gorilla/websocket v1.5.3\ngo: downloading go.uber.org/multierr v1.10.0"
+    }
+  ],
+  "pr_note": "Include the encrypted diagnostic logd artifact(s): diagnostic/build-ba8f6713.logd. The encrypted .logd is the required diagnostic content for PR review; this JSON file is metadata. Maintainers may ask you to remove these diagnostic artifacts before merging."
+}
