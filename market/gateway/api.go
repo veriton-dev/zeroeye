@@ -356,6 +356,9 @@ func (g *Gateway) registerDefaultRoutes() {
 	g.mux.HandleFunc("/api/v1/market/candles", g.handleGetCandles())
 	g.mux.HandleFunc("/api/v1/market/news", g.handleGetNews())
 
+	// AI read-tool hooks (Opire #2853 scaffolding)
+	g.mountAIToolRoutes()
+
 	// WebSocket endpoint
 	if g.config.WSEnabled {
 		g.mux.HandleFunc("/api/v1/ws", g.handleWebSocket())

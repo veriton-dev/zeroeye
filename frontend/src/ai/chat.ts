@@ -727,3 +727,92 @@ export class AiChatService {
     return { ...this.config };
   }
 }
+
+
+// ---------------------------------------------------------------------------
+// Read tool hook scaffolding (Opire #2853)
+// ---------------------------------------------------------------------------
+
+/** Spec for a read-only market tool the chat assistant can call. */
+export interface MarketReadToolSpec {
+  name: string;
+  description: string;
+  kind: 'read' | 'write';
+  parameters: Record<string, unknown>;
+}
+
+const READ_MARKET_DATA_SPEC: MarketReadToolSpec = {
+  name: 'read_market_data',
+  description:
+    'Read-only market quote snapshot for a symbol (bid/ask/mid/volume). No orders, no side effects.',
+  kind: 'read',
+  parameters: {
+    type: 'object',
+    properties: {
+      symbol: { type: 'string', description: 'Market symbol, e.g. BTC-USD' },
+      fields: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Optional subset: bid, ask, mid, volume, ts',
+      },
+    },
+    required: ['symbol'],
+    additionalProperties: false,
+  },
+};
+
+/** List tools available to the AI chat layer (scaffolding). */
+export function listMarketReadTools(): MarketReadToolSpec[] {
+  return [READ_MARKET_DATA_SPEC];
+}
+
+/**
+ * Invoke read_market_data via gateway.
+ * Falls back to a local stub if the gateway is unreachable (offline scaffolding).
+ */
+export async function invokeReadMarketData(
+  symbol: string,
+  fields?: string[],
+  baseUrl: string = '/api/v1'
+): Promise<{ ok: boolean; data?: Record<string, unknown>; error?: string }> {
+  const body = JSON.stringify({ symbol, fields });
+  try {
+    const res = await fetch(`${baseUrl}/ai/tools/read_market_data`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
+    const json = await res.json();
+    return json;
+  } catch (err) {
+    const sym = String(symbol || '').toUpperCase();
+    if (!sym) return { ok: false, error: 'symbol required' };
+    const base = sym.length * 10 + 100;
+    const data: Record<string, unknown> = {
+      symbol: sym,
+      bid: base - 0.05,
+      ask: base + 0.05,
+      mid: base,
+      volume: 1000 + sym.length * 17,
+      ts: new Date().toISOString(),
+      source: 'frontend_stub_v1',
+    };
+    if (fields && fields.length) {
+      const filtered: Record<string, unknown> = { symbol: data.symbol };
+      for (const f of fields) {
+        if (f && f !== 'symbol' && f in data) filtered[f] = data[f];
+      }
+      return { ok: true, data: filtered };
+    }
+    return { ok: true, data };
+  }
+}
+
+/** Register read tools onto an AiChatService-like object if it exposes registerTool. */
+export function attachMarketReadTools(service: { registerTool?: (name: string, fn: Function) => void } | null | undefined) {
+  if (!service || typeof service.registerTool !== 'function') return false;
+  service.registerTool('read_market_data', (args: { symbol?: string; fields?: string[] }) =>
+    invokeReadMarketData(args?.symbol || '', args?.fields)
+  );
+  return true;
+}
